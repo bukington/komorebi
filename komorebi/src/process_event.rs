@@ -260,18 +260,25 @@ impl WindowManager {
                 let workspace = self.focused_workspace_mut()?;
 
                 if !workspace.contains_window(window.hwnd) {
-                    match behaviour {
-                        WindowContainerBehaviour::Create => {
-                            workspace.new_container_for_window(*window);
-                            self.update_focused_workspace(false)?;
+                    {
+                        match behaviour {
+                            WindowContainerBehaviour::Create => {
+                                workspace.new_container_for_window(*window);
+                                self.update_focused_workspace(false)?;
+                            }
+                            WindowContainerBehaviour::Append => {
+                                workspace
+                                    .focused_container_mut()
+                                    .ok_or_else(|| anyhow!("there is no focused container"))?
+                                    .add_window(*window);
+                                self.update_focused_workspace(true)?;
+                            }
                         }
-                        WindowContainerBehaviour::Append => {
-                            workspace
-                                .focused_container_mut()
-                                .ok_or_else(|| anyhow!("there is no focused container"))?
-                                .add_window(*window);
-                            self.update_focused_workspace(true)?;
-                        }
+                    }
+                    self.enforce_workspace_rules()?;
+                    // If encore workspace move the window, follow it
+                    if !self.focused_workspace_mut()?.contains_window(window.hwnd) {
+                        self.switch_to_window(window)?;
                     }
                 }
             }
