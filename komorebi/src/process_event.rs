@@ -220,8 +220,12 @@ impl WindowManager {
                             window.focus(false)?;
                         }
                     } else {
-                        self.focused_workspace_mut()?
-                            .focus_container_by_window(window.hwnd)?;
+                        if self.focused_workspace_mut()?.contains_managed_window(window.hwnd) {
+                            self.focused_workspace_mut()?
+                                .focus_container_by_window(window.hwnd)?;
+                        } else {
+                            self.switch_to_window(window)?;
+                        }
                     }
                 }
             }
