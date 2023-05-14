@@ -52,11 +52,11 @@ pub fn new(id: isize, size: Rect, work_area_size: Rect, name: String) -> Monitor
 }
 
 impl Monitor {
-    pub fn load_focused_workspace(&mut self, mouse_follows_focus: bool) -> Result<()> {
+    pub fn load_focused_workspace(&mut self, mouse_follows_focus: bool, focus_window: bool) -> Result<()> {
         let focused_idx = self.focused_workspace_idx();
         for (i, workspace) in self.workspaces_mut().iter_mut().enumerate() {
             if i == focused_idx {
-                workspace.restore(mouse_follows_focus)?;
+                workspace.restore(mouse_follows_focus, focus_window)?;
             } else {
                 workspace.hide();
             }

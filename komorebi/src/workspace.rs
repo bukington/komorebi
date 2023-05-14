@@ -153,14 +153,14 @@ impl Workspace {
         }
     }
 
-    pub fn restore(&mut self, mouse_follows_focus: bool) -> Result<()> {
+    pub fn restore(&mut self, mouse_follows_focus: bool, focus_window: bool) -> Result<()> {
         let idx = self.focused_container_idx();
         let mut to_focus = None;
         for (i, container) in self.containers_mut().iter_mut().enumerate() {
             if let Some(window) = container.focused_window_mut() {
                 window.restore();
 
-                if idx == i {
+                if focus_window && idx == i {
                     to_focus = Option::from(*window);
                 }
             }

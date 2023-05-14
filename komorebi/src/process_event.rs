@@ -226,27 +226,9 @@ impl WindowManager {
                 }
             }
             WindowManagerEvent::Show(_, window) | WindowManagerEvent::Manage(window) => {
-                let mut switch_to = None;
-                for (i, monitors) in self.monitors().iter().enumerate() {
-                    for (j, workspace) in monitors.workspaces().iter().enumerate() {
-                        if workspace.contains_window(window.hwnd) {
-                            switch_to = Some((i, j));
-                        }
-                    }
-                }
-
-                if let Some((known_monitor_idx, known_workspace_idx)) = switch_to {
-                    if self.focused_monitor_idx() != known_monitor_idx
-                        || self
-                            .focused_monitor()
-                            .ok_or_else(|| anyhow!("there is no monitor"))?
-                            .focused_workspace_idx()
-                            != known_workspace_idx
-                    {
-                        self.focus_monitor(known_monitor_idx)?;
-                        self.focus_workspace(known_workspace_idx)?;
-                        return Ok(());
-                    }
+                // Attempt to switch to window in another workspace
+                if self.switch_to_window(window)? {
+                    return Ok(());
                 }
 
                 // There are some applications such as Firefox where, if they are focused when a
@@ -418,11 +400,11 @@ impl WindowManager {
                                 // so that we don't have ghost tiles until we force an interaction on
                                 // the origin monitor's focused workspace
                                 self.focus_monitor(origin_monitor_idx)?;
-                                self.focus_workspace(origin_workspace_idx)?;
+                                self.focus_workspace(origin_workspace_idx, false)?;
                                 self.update_focused_workspace(false)?;
 
                                 self.focus_monitor(target_monitor_idx)?;
-                                self.focus_workspace(target_workspace_idx)?;
+                                self.focus_workspace(target_workspace_idx, false)?;
                                 self.update_focused_workspace(false)?;
                             }
                             // Here we handle a simple move on the same monitor which is treated as
@@ -499,10 +481,49 @@ impl WindowManager {
                     }
                 }
             }
+            WindowManagerEvent::Uncloak(_, window) => {
+                tracing::info!("Uncloaking {:?}", window.hwnd());
+                // focus the workspace the window is on
+                if self.focused_workspace()?.contains_window(window.hwnd) {
+                    return Ok(());
+                }
+
+                // attempt to find the window on another workspace
+                let mut switch_to = None;
+                for (i, monitors) in self.monitors().iter().enumerate() {
+                    for (j, workspace) in monitors.workspaces().iter().enumerate() {
+                        if workspace.contains_window(window.hwnd) {
+                            switch_to = Some((i, j));
+                        }
+                    }
+                }
+                if let Some((known_monitor_idx, known_workspace_idx)) = switch_to {
+                    tracing::info!("Switching to {} {}", known_monitor_idx, known_workspace_idx);
+                    if self.focused_monitor_idx() != known_monitor_idx
+                        || self
+                            .focused_monitor()
+                            .ok_or_else(|| anyhow!("there is no monitor"))?
+                            .focused_workspace_idx()
+                            != known_workspace_idx
+                            {
+                                tracing::info!("Adjusting to {} {}", known_monitor_idx, known_workspace_idx);
+                                self.focus_monitor(known_monitor_idx)?;
+                                self.focus_workspace(known_workspace_idx, false)?;
+
+                                // let window_rect = WindowsApi::window_rect(window.hwnd())?;
+                                // WindowsApi::center_cursor_in_rect(&window_rect)?;
+                                // WindowsApi::left_click();
+                                window.focus(false)?;
+
+                                if BORDER_ENABLED.load(Ordering::SeqCst) {
+                                    self.show_border()?;
+                                };
+                            }
+                }
+            }
             WindowManagerEvent::DisplayChange(..)
             | WindowManagerEvent::MouseCapture(..)
-            | WindowManagerEvent::Cloak(..)
-            | WindowManagerEvent::Uncloak(..) => {}
+            | WindowManagerEvent::Cloak(..) => {}
         };
 
         if *self.focused_workspace()?.tile() && BORDER_ENABLED.load(Ordering::SeqCst) {

@@ -541,7 +541,7 @@ impl WindowManager {
                         .ok_or_else(|| anyhow!("there must be at least one workspace"))?,
                 );
 
-                self.focus_workspace(workspace_idx)?;
+                self.focus_workspace(workspace_idx, true)?;
 
                 if BORDER_ENABLED.load(Ordering::SeqCst) {
                     self.show_border()?;
@@ -555,7 +555,7 @@ impl WindowManager {
                     self.focus_monitor(monitor_idx)?;
                 }
 
-                self.focus_workspace(workspace_idx)?;
+                self.focus_workspace(workspace_idx, true)?;
 
                 if BORDER_ENABLED.load(Ordering::SeqCst) {
                     self.show_border()?;
@@ -586,14 +586,14 @@ impl WindowManager {
             }
             SocketMessage::FocusMonitorWorkspaceNumber(monitor_idx, workspace_idx) => {
                 self.focus_monitor(monitor_idx)?;
-                self.focus_workspace(workspace_idx)?;
+                self.focus_workspace(workspace_idx, true)?;
             }
             SocketMessage::FocusNamedWorkspace(ref name) => {
                 if let Some((monitor_idx, workspace_idx)) =
                     self.monitor_workspace_index_by_name(name)
                 {
                     self.focus_monitor(monitor_idx)?;
-                    self.focus_workspace(workspace_idx)?;
+                    self.focus_workspace(workspace_idx, true)?;
                 }
 
                 if BORDER_ENABLED.load(Ordering::SeqCst) {
