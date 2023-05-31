@@ -524,7 +524,7 @@ impl WindowManager {
                                 // let window_rect = WindowsApi::window_rect(window.hwnd())?;
                                 // WindowsApi::center_cursor_in_rect(&window_rect)?;
                                 // WindowsApi::left_click();
-                                window.focus(false)?;
+                                // window.focus(false)?; 
 
                                 if BORDER_ENABLED.load(Ordering::SeqCst) {
                                     self.show_border()?;
