@@ -6,6 +6,7 @@ use std::num::NonZeroUsize;
 use std::path::PathBuf;
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
+use std::time::Instant;
 
 use color_eyre::eyre::anyhow;
 use color_eyre::Result;
@@ -77,6 +78,7 @@ pub struct WindowManager {
     pub has_pending_raise_op: bool,
     pub pending_move_op: Option<(usize, usize, usize)>,
     pub already_moved_window_handles: Arc<Mutex<HashSet<isize>>>,
+    pub last_uncloak: Option<Instant>,
 }
 
 #[allow(clippy::struct_excessive_bools)]
@@ -201,6 +203,7 @@ impl WindowManager {
             has_pending_raise_op: false,
             pending_move_op: None,
             already_moved_window_handles: Arc::new(Mutex::new(HashSet::new())),
+            last_uncloak: None,
         })
     }
 

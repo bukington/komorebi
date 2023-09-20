@@ -641,6 +641,7 @@ impl StaticConfig {
             has_pending_raise_op: false,
             pending_move_op: None,
             already_moved_window_handles: Arc::new(Mutex::new(HashSet::new())),
+            last_uncloak: None,
         };
 
         let bytes = SocketMessage::ReloadStaticConfiguration(path.clone()).as_bytes()?;

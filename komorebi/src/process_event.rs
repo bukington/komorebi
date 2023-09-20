@@ -56,6 +56,8 @@ impl WindowManager {
     #[allow(clippy::too_many_lines, clippy::cognitive_complexity)]
     #[tracing::instrument(skip(self))]
     pub fn process_event(&mut self, event: &mut WindowManagerEvent) -> Result<()> {
+        tracing::info!("processing: {}", event.window().to_string());
+
         if self.is_paused {
             tracing::trace!("ignoring while paused");
             return Ok(());
@@ -494,6 +496,17 @@ impl WindowManager {
             }
             WindowManagerEvent::Uncloak(_, window) => {
                 tracing::info!("Uncloaking {:?}", window.hwnd());
+                
+                // // drop event if last one is less than 100ms old
+                // if let Some(last_uncloak) = self.last_uncloak {
+                //     if last_uncloak.elapsed() < Duration::from_millis(100) {
+                //         tracing::info!("Dropping uncloak event due to last one being less than 100ms old (elapsed: {:?})", last_uncloak.elapsed());
+                //         return Ok(());
+                //     }
+                // }
+                //
+                // self.last_uncloak = Some(Instant::now());
+
                 // focus the workspace the window is on
                 if self.focused_workspace()?.contains_window(window.hwnd) {
                     return Ok(());
@@ -525,6 +538,7 @@ impl WindowManager {
                                 // WindowsApi::center_cursor_in_rect(&window_rect)?;
                                 // WindowsApi::left_click();
                                 // window.focus(false)?; 
+                                // self.focused_workspace_mut()?.focus_container_by_window(window.hwnd)?;
 
                                 if BORDER_ENABLED.load(Ordering::SeqCst) {
                                     self.show_border()?;
