@@ -1072,12 +1072,12 @@ impl WindowManager {
         // Set the focused workspaces for the first and second monitors
         if let Some(first_monitor) = self.monitors_mut().get_mut(first_idx) {
             first_monitor.focus_workspace(second_focused_workspace)?;
-            first_monitor.load_focused_workspace(mouse_follows_focus)?;
+            first_monitor.load_focused_workspace(mouse_follows_focus, false)?;
         }
 
         if let Some(second_monitor) = self.monitors_mut().get_mut(second_idx) {
             second_monitor.focus_workspace(first_focused_workspace)?;
-            second_monitor.load_focused_workspace(mouse_follows_focus)?;
+            second_monitor.load_focused_workspace(mouse_follows_focus, false)?;
         }
 
         self.update_focused_workspace_by_monitor_idx(second_idx)?;
